@@ -1,0 +1,524 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"r",
+				"ReadByte\tbyte, error ƒ"
+			],
+			[
+				"re",
+				"ReadByte\tbyte, error ƒ"
+			],
+			[
+				"add",
+				"addr_buf\t[]byte ν"
+			],
+			[
+				"fun",
+				"func (*Req)\tfunc (...) {...} ʂ"
+			],
+			[
+				"pr",
+				"Printf\tn int, err error ƒ"
+			],
+			[
+				"me",
+				"method_num\tbyte ν"
+			],
+			[
+				"las",
+				"last_center_x"
+			],
+			[
+				"la",
+				"last_idx"
+			],
+			[
+				"del",
+				"delete"
+			],
+			[
+				"mou",
+				"mouse_px"
+			],
+			[
+				"cen",
+				"center_x"
+			],
+			[
+				"til",
+				"tile_center_x"
+			],
+			[
+				"dire",
+				"direction"
+			],
+			[
+				"onzo",
+				"on_zoom_click"
+			],
+			[
+				"dri",
+				"direction"
+			],
+			[
+				"der",
+				"direction"
+			],
+			[
+				"ti",
+				"tile_name"
+			],
+			[
+				"tile",
+				"tile_cnt_x"
+			],
+			[
+				"sta",
+				"start_ty"
+			],
+			[
+				"star",
+				"start_tx"
+			],
+			[
+				"im",
+				"img_src"
+			],
+			[
+				"de",
+				"del_tile_name"
+			],
+			[
+				"do",
+				"do_zoom"
+			],
+			[
+				"ge",
+				"getElementById"
+			],
+			[
+				"in",
+				"IndexByte\tint ƒ"
+			],
+			[
+				"inde",
+				"IndexByte\tint ƒ"
+			],
+			[
+				"ind",
+				"IndexByte\tint ƒ"
+			],
+			[
+				"par",
+				"parse_nmea_proto\tint ƒ"
+			],
+			[
+				"gp",
+				"gps_data\tdb.GPSData ν"
+			],
+			[
+				"gps",
+				"gps_data\tGPSData ν"
+			],
+			[
+				"js",
+				"json_data\t[]byte ν"
+			],
+			[
+				"con",
+				"Conn\tstruct ʈ"
+			],
+			[
+				"ky",
+				"key_hex\t[16]byte ν"
+			],
+			[
+				"un",
+				"UnixNano\tint64 ƒ"
+			],
+			[
+				"imp",
+				"import\timport (...) ʂ"
+			],
+			[
+				"er",
+				"err2\terror ν"
+			],
+			[
+				"lis",
+				"ListenTCP\t*net.TCPListener, error ƒ"
+			],
+			[
+				"u",
+				"UnixNano\tint64 ƒ"
+			],
+			[
+				"no",
+				"Now\ttime.Time ƒ"
+			],
+			[
+				"wri",
+				"WriteString\tn int, err error ƒ"
+			],
+			[
+				"tra",
+				"Transform\tmgLat, mgLon float64 ƒ"
+			],
+			[
+				"l",
+				"lng\tfloat64 ν"
+			],
+			[
+				"sp",
+				"Sprintf\tstring ƒ"
+			],
+			[
+				"m1",
+				"m1_f\tfloat64 ν"
+			],
+			[
+				"p",
+				"Println\tn int, err error ƒ"
+			],
+			[
+				"P",
+				"Println\tn int, err error ƒ"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "src/local/local.go",
+			"settings":
+			{
+				"buffer_size": 3459,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/share/share.go",
+			"settings":
+			{
+				"buffer_size": 97,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/server/server.go",
+			"settings":
+			{
+				"buffer_size": 117,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 392.0,
+		"last_filter": "Package Control: ",
+		"selected_items":
+		[
+			[
+				"Package Control: ",
+				"Package Control: List Packages"
+			]
+		],
+		"width": 432.0
+	},
+	"console":
+	{
+		"height": 126.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = '2915d1851351e5ee549c20394736b442' + '8bc59f460fa1548d1514676163dafc88'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by) "
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/K/software/server/go/chaos_sock",
+		"/K/software/server/go/chaos_sock/src",
+		"/K/software/server/go/chaos_sock/src/local",
+		"/K/software/server/go/chaos_sock/src/server",
+		"/K/software/server/go/chaos_sock/src/share"
+	],
+	"file_history":
+	[
+		"/K/software/server/go/loc/src/web/http.go",
+		"/K/software/server/go/loc/src/connection/nmea_proto.go",
+		"/K/software/server/go/loc/src/connection/loc_proto.go",
+		"/K/software/server/go/loc/src/connection/tcp_nmea0183.go",
+		"/K/software/server/go/loc/src/connection/tcp.go",
+		"/K/software/server/go/loc/src/db/db.go",
+		"/K/software/server/go/loc/src/connection/protocol.go",
+		"/K/software/server/go/loc/src/img/img.go",
+		"/K/software/server/go/loc/src/web/websock.go",
+		"/K/software/server/go/loc/src/web/tile.go",
+		"/K/software/server/go/loc/src/web/path.go",
+		"/K/software/server/go/loc/src/session/session.go",
+		"/K/software/server/go/loc/src/main/main.go",
+		"/K/software/server/go/loc/src/gps/web_mercator.go",
+		"/K/software/server/go/loc/src/img/web_mercator.go",
+		"/K/software/server/go/loc/src/gps/gps.go",
+		"/K/software/server/go/loc/src/gps/gcj02.go",
+		"/K/software/server/go/loc/src/gps/GCJ02.go",
+		"/K/software/server/go/loc/src/gps/img.go",
+		"/K/software/server/go/loc/template/js/main.js",
+		"/K/software/server/go/loc/template/index.html",
+		"/K/software/server/go/loc/src/server/http.go",
+		"/K/software/server/go/loc/src/github.com/golang/net/websocket/websocket.go",
+		"/K/software/server/go/loc/src/github.com/golang/net/websocket/examplehandler_test.go",
+		"/K/software/server/go/loc/src/github.com/golang/net/websocket/exampledial_test.go",
+		"/K/software/server/go/loc/src/img/gps.go",
+		"/K/software/server/go/loc/src/img/GCJ02.go",
+		"/C/Users/ding/AppData/Roaming/Sublime Text 3/Packages/GoSublime/CHANGELOG.md",
+		"/C/Users/ding/AppData/Roaming/Sublime Text 3/Packages/GoSublime/USAGE.md"
+	],
+	"find":
+	{
+		"height": 23.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"console",
+			"wheel",
+			"display",
+			"do_zoom",
+			"cache_gc",
+			"setInterval",
+			"GPS2Pixel",
+			"web"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "src/local/local.go",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3459,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1964,
+								1964
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1834.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/share/share.go",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 97,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								97,
+								14
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/server/server.go",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 117,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								96,
+								96
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 23.0
+	},
+	"input":
+	{
+		"height": 31.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.GoSublime-main-output":
+	{
+		"height": 100.0
+	},
+	"output.GoSublime-output":
+	{
+		"height": 100.0
+	},
+	"output.MarGo-output":
+	{
+		"height": 100.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "chaos_sock.sublime-project",
+	"replace":
+	{
+		"height": 42.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 319.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
