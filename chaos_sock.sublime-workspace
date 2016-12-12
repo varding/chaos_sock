@@ -4,11 +4,23 @@
 		"selected_items":
 		[
 			[
-				"r",
-				"ReadByte\tbyte, error ƒ"
+				"at",
+				"atype\tbyte ν"
+			],
+			[
+				"a",
+				"atype\tbyte ν"
+			],
+			[
+				"dia",
+				"Dial\tnet.Conn, error ƒ"
 			],
 			[
 				"re",
+				"ReadByte\tbyte, error ƒ"
+			],
+			[
+				"r",
 				"ReadByte\tbyte, error ƒ"
 			],
 			[
@@ -195,16 +207,8 @@
 			"file": "src/local/local.go",
 			"settings":
 			{
-				"buffer_size": 3459,
+				"buffer_size": 3155,
 				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/share/share.go",
-			"settings":
-			{
-				"buffer_size": 97,
 				"line_ending": "Windows"
 			}
 		},
@@ -212,7 +216,7 @@
 			"file": "src/server/server.go",
 			"settings":
 			{
-				"buffer_size": 117,
+				"buffer_size": 718,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -263,6 +267,7 @@
 	],
 	"file_history":
 	[
+		"/K/software/server/go/chaos_sock/src/share/share.go",
 		"/K/software/server/go/loc/src/web/http.go",
 		"/K/software/server/go/loc/src/connection/nmea_proto.go",
 		"/K/software/server/go/loc/src/connection/loc_proto.go",
@@ -334,7 +339,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 1,
 			"sheets":
 			[
 				{
@@ -343,15 +348,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 3459,
+						"buffer_size": 3155,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1964,
-								1964
+								1069,
+								947
 							]
 						],
 						"settings":
@@ -360,56 +365,27 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1834.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "src/share/share.go",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 97,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								97,
-								14
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 585.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
 					"type": "text"
 				},
 				{
-					"buffer": 2,
+					"buffer": 1,
 					"file": "src/server/server.go",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 117,
+						"buffer_size": 718,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								96,
-								96
+								712,
+								712
 							]
 						],
 						"settings":
@@ -418,10 +394,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 135.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 0,
 					"type": "text"
 				}
 			]

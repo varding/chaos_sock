@@ -2,10 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/binary"
 	"flag"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -30,9 +29,9 @@ func main() {
 
 	//先用一个常用的密码
 	//这个是正常的sock
-	go run(local_port)
+	//go run(local_port)
 	//local<=>server<=>share 内部网共享方式
-	run(local_port + 2)
+	run(local_port)
 }
 
 func run(local_port int) {
@@ -57,8 +56,10 @@ http://blog.csdn.net/testcs_dn/article/details/7915505
 */
 
 type Req struct {
-	conn net.Conn
-	r    *bufio.Reader
+	req_conn net.Conn
+	fwd_conn net.Conn
+	r        *bufio.Reader
+	session  int
 }
 
 func handle_sock5(conn net.Conn) {
@@ -70,10 +71,14 @@ func handle_sock5(conn net.Conn) {
 
 		fmt.Println("exit req")
 	}()
-	r := Req{r: bufio.NewReader(conn), conn: conn}
+
+	r := Req{r: bufio.NewReader(conn), req_conn: conn}
 	r.check_hello()
 	r.say_hello()
-
+	r.check_destination()
+	for {
+		r.handle_req()
+	}
 }
 
 func check_err(err error) {
@@ -85,7 +90,7 @@ func check_err(err error) {
 func (this *Req) check_hello() {
 	ver, err := this.r.ReadByte()
 	check_err(err)
-	fmt.Println("ver:", ver)
+	fmt.Println("method ver:", ver)
 
 	method_num, err := this.r.ReadByte()
 	check_err(err)
@@ -102,7 +107,7 @@ func (this *Req) check_hello() {
 
 func (this *Req) say_hello() {
 	ack := [2]byte{0x05, 0x00}
-	this.conn.Write(ack[:])
+	this.req_conn.Write(ack[:])
 }
 
 /*
@@ -111,102 +116,77 @@ func (this *Req) say_hello() {
 func (this *Req) check_destination() {
 	ver, err := this.r.ReadByte()
 	check_err(err)
+	fmt.Println("dst ver:", ver)
 
 	cmd, err := this.r.ReadByte()
 	check_err(err)
-	//CONNECT：X’01’  BIND：X’02’  UDP ASSOCIATE：X’03’
-	if cmd == 0x01 {
-
-	}
 
 	//rsv
-	this.r.UnreadByte()
+	rsv, err := this.r.ReadByte()
+	check_err(err)
+	fmt.Println("rsv:", rsv)
 
 	atype, err := this.r.ReadByte()
 	check_err(err)
-	this.read_dst_addr(atype)
+	fmt.Println("atype:", atype)
 
-	port_h, err := this.r.ReadByte()
-	check_err(err)
+	if cmd == 1 {
+		addr := this.read_dst_addr(atype)
 
-	port_l, err := this.r.ReadByte()
-	check_err(err)
+		var port [2]byte
+		_, err = this.r.Read(port[:])
+		check_err(err)
+
+		fmt.Println("port:", binary.BigEndian.Uint16(port[:]))
+
+		this.fwd_conn, err = net.Dial("tcp", "127.0.0.1:1010")
+		check_err(err)
+
+		var at [1]byte
+		at[0] = atype
+		this.fwd_conn.Write(at[:])
+		this.fwd_conn.Write(addr)
+		this.fwd_conn.Write(port[:])
+	}
 
 }
 
-func (this *Req) read_dst_addr(atype byte) {
+func (this *Req) read_dst_addr(atype byte) []byte {
 	switch atype {
 	case 0x01:
 		var ip [4]byte
 		_, err := this.r.Read(ip[:])
 		check_err(err)
+		//net.Dial("tcp", fmt.Sprintf(format, ...))
+		fmt.Println("dst ip:", ip)
+		return ip[:]
 	case 0x03:
 		addr_len, err := this.r.ReadByte()
 		check_err(err)
 
 		addr_buf := make([]byte, addr_len)
-		n, err := this.r.Read(addr_buf)
+		_, err = this.r.Read(addr_buf)
 		check_err(err)
-
+		fmt.Println("addr:", string(addr_buf))
+		return addr_buf
 	case 0x04:
 		var ipv6 [16]byte
 		_, err := this.r.Read(ipv6[:])
 		check_err(err)
+		return ipv6[:]
 	}
+	return nil
 }
 
 func (this *Req) write_dst_ack() {
 
 }
 
-// func hello_ack(conn net.Conn) {
-// 	//data:=make([]byte,)
-// 	var data [16]byte
-// 	n, err := conn.Read(data[:2])
-// 	//if n
-// 	ver := data[0]
-// 	method_num := data[1]
-// 	//ver :=binary.uin
-// }
-
-func method_sel(conn net.Conn) {
-	buf := []byte{0, 0, 0}
-	n, err := io.ReadAtLeast(conn, buf, 3)
-	if err != nil {
-		log.Fatal("read method selection err:", err)
-		conn.Close()
-		return
+func (this *Req) handle_req() {
+	var data [256]byte
+	for {
+		n, err := this.r.Read(data[:])
+		check_err(err)
+		fmt.Println(data[:n])
 	}
-
-	/*
-		   +----+----------+----------+
-		   |VER | NMETHODS | METHODS  |
-		   +----+----------+----------+
-		   | 1  |    1     | 1 to 255 |
-		   +----+----------+----------+
-			其实只要确认是socks5就行了，至少提供一种方法，即使发送了多种方法，也不需要读后面了
-	*/
-	if buf[0] != 5 {
-		log.Fatalf("err socks version:%d\n", buf[0])
-		conn.Close()
-		return
-	}
-
-	//如果有多余的验证方法就要读掉
-	num_method := int(buf[1])
-	data_len := num_method + 2
-	if data_len > n {
-		io.Copy(ioutil.Discard, conn)
-	}
-
-	//回复sock5版本,不需要验证
-	_, err = conn.Write([]byte{5, 0})
-	if err != nil {
-		log.Fatalln("write method selection err:", err)
-		conn.Close()
-	}
-}
-
-func parse_request(conn net.Conn) {
-
 }
