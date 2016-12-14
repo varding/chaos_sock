@@ -1,8 +1,9 @@
 package util
 
 import (
-//"fmt"
-//"strings"
+	//"fmt"
+	//"strings"
+	"net"
 )
 
 func ChkError(err error) int {
@@ -23,4 +24,18 @@ func ChkError(err error) int {
 		return 0
 	}
 	return -1
+}
+
+func Fwd(src, dst net.Conn, buf []byte) {
+	if buf == nil {
+		buf = make([]byte, 2048)
+	}
+	for {
+		n, err := src.Read(buf)
+		if ChkError(err) == 0 {
+			dst.Close()
+			break
+		}
+		dst.Write(buf[:n])
+	}
 }

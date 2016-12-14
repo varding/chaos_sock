@@ -60,7 +60,7 @@ type Req struct {
 	req_conn net.Conn
 	fwd_conn net.Conn
 	req_port string //用port作为sessionid来区分哪个连接
-	buf      [512]byte
+	buf      [2048]byte
 }
 
 func handle_sock5(conn net.Conn) {
@@ -90,8 +90,7 @@ func handle_sock5(conn net.Conn) {
 	//给客户端写ack
 	r.write_dst_ack() //立即回复可以减少延时，但是可能会给服务器增加没必要的数据接收
 
-	go r.handle_downstream()
-	r.handle_upstream()
+	r.fwd()
 }
 
 func check_err(err error) {
@@ -199,8 +198,9 @@ func (this *Req) format_host(atype byte, addr []byte, port uint16) string {
 	return ""
 }
 
-//var dst_ack = []byte{05, 00, 00, 01, 00, 00, 00, 00, 00, 00}
-var dst_ack = []byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x08, 0x43}
+var dst_ack = []byte{05, 00, 00, 01, 00, 00, 00, 00, 00, 00}
+
+//var dst_ack = []byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x08, 0x43}
 
 func (this *Req) write_dst_ack() {
 	//给发起请求者回复dst
@@ -210,28 +210,7 @@ func (this *Req) write_dst_ack() {
 	this.req_conn.Write([]byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x08, 0x43})
 }
 
-func (this *Req) handle_upstream() {
-	buf := this.buf[:]
-	for {
-		n, err := this.req_conn.Read(buf)
-		if util.ChkError(err) == 0 {
-			this.fwd_conn.Close()
-			break
-		}
-		//fmt.Println(string(buf[:n]))
-		this.fwd_conn.Write(buf[:n])
-	}
-}
-
-func (this *Req) handle_downstream() {
-	buf := make([]byte, 512)
-	for {
-		n, err := this.fwd_conn.Read(buf)
-		if util.ChkError(err) == 0 {
-			this.req_conn.Close()
-			break
-		}
-		//fmt.Println(string(buf[:n]))
-		this.req_conn.Write(buf[:n])
-	}
+func (this *Req) fwd() {
+	go util.Fwd(this.req_conn, this.fwd_conn, this.buf[:])
+	util.Fwd(this.fwd_conn, this.req_conn, nil)
 }
