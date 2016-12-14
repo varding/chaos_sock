@@ -4,20 +4,32 @@
 		"selected_items":
 		[
 			[
-				"at",
-				"atype\tbyte ν"
+				"ho",
+				"host_len\tint ν"
+			],
+			[
+				"re",
+				"req_conn\tnet.Conn ν"
+			],
+			[
+				"pr",
+				"Printf\t ƒ"
+			],
+			[
+				"f",
+				"fwd_conn\tnet.Conn ν"
 			],
 			[
 				"a",
+				"addr_len\tbyte ν"
+			],
+			[
+				"at",
 				"atype\tbyte ν"
 			],
 			[
 				"dia",
 				"Dial\tnet.Conn, error ƒ"
-			],
-			[
-				"re",
-				"ReadByte\tbyte, error ƒ"
 			],
 			[
 				"r",
@@ -30,10 +42,6 @@
 			[
 				"fun",
 				"func (*Req)\tfunc (...) {...} ʂ"
-			],
-			[
-				"pr",
-				"Printf\tn int, err error ƒ"
 			],
 			[
 				"me",
@@ -207,7 +215,25 @@
 			"file": "src/local/local.go",
 			"settings":
 			{
-				"buffer_size": 3155,
+				"buffer_size": 4579,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/util/util.go",
+			"settings":
+			{
+				"buffer_size": 496,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/local/test_local.go",
+			"settings":
+			{
+				"buffer_size": 305,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -216,7 +242,7 @@
 			"file": "src/server/server.go",
 			"settings":
 			{
-				"buffer_size": 718,
+				"buffer_size": 2134,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -263,7 +289,8 @@
 		"/K/software/server/go/chaos_sock/src",
 		"/K/software/server/go/chaos_sock/src/local",
 		"/K/software/server/go/chaos_sock/src/server",
-		"/K/software/server/go/chaos_sock/src/share"
+		"/K/software/server/go/chaos_sock/src/share",
+		"/K/software/server/go/chaos_sock/src/util"
 	],
 	"file_history":
 	[
@@ -339,7 +366,7 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 3,
 			"sheets":
 			[
 				{
@@ -348,15 +375,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 3155,
+						"buffer_size": 4579,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1069,
-								947
+								1455,
+								1436
 							]
 						],
 						"settings":
@@ -365,7 +392,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 585.0,
+						"translation.y": 855.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
@@ -373,19 +400,19 @@
 				},
 				{
 					"buffer": 1,
-					"file": "src/server/server.go",
+					"file": "src/util/util.go",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 718,
+						"buffer_size": 496,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								712,
-								712
+								493,
+								493
 							]
 						],
 						"settings":
@@ -394,7 +421,65 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 135.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/local/test_local.go",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 305,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								25,
+								25
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/server/server.go",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2134,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1271,
+								1271
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 540.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,

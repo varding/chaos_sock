@@ -4,15 +4,15 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
 	"strings"
+	"util"
 )
 
 /*
-	这个实际上是socks5的服务器端的一部分
+	local放在本地，可以认为前面的握手是不会分包的，因此readFull是可以把协议一次全部读完
 */
 
 func main() {
@@ -64,25 +64,34 @@ type Req struct {
 }
 
 func handle_sock5(conn net.Conn) {
-	addr := conn.LocalAddr().String()
+	addr := conn.RemoteAddr().String()
 	addr_parts := strings.Split(addr, ":")
 	req_port := addr_parts[1]
 
 	defer func() {
 		conn.Close()
 		if err := recover(); err != nil {
-			fmt.Println(err)
+			log.Printf("[%s]%v", req_port, err)
 		}
 
-		log.Printf("[%s]exit req", req_port)
+		log.Printf("[%s]exit req\n", req_port)
 	}()
 
 	r := Req{req_conn: conn, req_port: req_port}
 	r.check_hand_shake()
 	r.write_hand_shake_ack()
-	r.parse_host()
+	host := r.parse_host()
+
+	if len(host) == 0 {
+		return
+	}
+	//连接fwd服务器
+	r.connect_fwd(host)
+	//给客户端写ack
+	r.write_dst_ack() //立即回复可以减少延时，但是可能会给服务器增加没必要的数据接收
+
 	go r.handle_downstream()
-	r.handle_downstream()
+	r.handle_upstream()
 }
 
 func check_err(err error) {
@@ -93,31 +102,21 @@ func check_err(err error) {
 
 func (this *Req) check_hand_shake() {
 	buf := this.buf[:]
-	n, err := io.ReadAtLeast(this.req_conn, buf, 3)
+	n, err := this.req_conn.Read(buf)
+	check_err(err)
+	buf = buf[:n]
 
-	log.Printf("[%s]ver:%d,method num:%d,method:%d\n", buf[0], buf[1], buf[2])
+	log.Printf("[%s]ver:%d,method num:%d,method:%d\n", this.req_port, buf[0], buf[1], buf[2])
 
 	//sock4不支持远程dns解析，这儿不支持
 	if buf[0] != 5 {
 		panic("only support sock5")
 	}
 
-	//其他method_num个数
-	other_method_num := int(buf[1]) - 1
-	//去掉前面3个总是存在的字节
-	buf = buf[3:]
-	//给剩余method保留空间
-	buf = buf[:other_method_num]
-	//可能刚才一次读完了，这个计算剩下要读的method个数
-	n -= 3
+	method_num := int(buf[1])
 
-	if other_method_num > 0 {
-		//至少已经读取了一个
-		if n < other_method_num {
-			n, err = io.ReadAtLeast(this.req_conn, buf[:], other_method_num-n)
-			check_err(err)
-		}
-		log.Printf("[%s]other methods:%v\n", buf)
+	if method_num > 1 {
+		log.Printf("[%s]other methods:%v\n", buf[3:])
 	}
 }
 
@@ -130,70 +129,59 @@ func (this *Req) write_hand_shake_ack() {
 
  */
 
-func (this *Req) parse_host() {
+func (this *Req) parse_host() string {
 	buf := this.buf[:]
 	//ver,cmd,rsv,atype,addr,port
-	n, err := io.ReadAtLeast(this.req_conn, buf[:], 4)
+	n, err := this.req_conn.Read(buf)
 	check_err(err)
+	buf = buf[:n]
 
 	cmd := buf[1]
 	atype := buf[3]
 	log.Printf("[%s]ver:%d,cmd:%d,atype:%d", this.req_port, buf[0], cmd, atype)
 
 	//剩余可用的数据
-	buf = buf[4:n]
+	buf = buf[4:]
 
 	if cmd == 1 {
-		addr := this.read_host(atype, buf)
 
-		// var port_buf [2]byte
-		// _, err = this.r.Read(port_buf[:])
-		// check_err(err)
+		host := this.read_host(atype, buf)
 
-		// port := binary.BigEndian.Uint16(port_buf[:])
+		log.Printf("[%s]%s", this.req_port, host)
+		return host
 
-		// host := this.format_host(atype, addr, port)
-		// fmt.Println("host:", host)
-
-		this.fwd_conn, err = net.Dial("tcp", "127.0.0.1:1010")
-		check_err(err)
-
-		//给转发服务器发送host
-		var host_len [1]byte
-		host_len[0] = byte(len(host))
-		this.fwd_conn.Write(host_len[:])
-		this.fwd_conn.Write([]byte(host))
-
-		//立即回复可以减少延时，但是可能会给服务器增加没必要的数据接收
-		this.write_dst_ack()
 	}
+	return ""
+}
+
+func (this *Req) connect_fwd(host string) {
+	var err error
+	this.fwd_conn, err = net.Dial("tcp", "127.0.0.1:1010")
+	check_err(err)
+
+	//给转发服务器发送host
+	var buf_len [1]byte
+	buf_len[0] = byte(len(host) + 1)
+	this.fwd_conn.Write(buf_len[:])
+	this.fwd_conn.Write([]byte(host))
 }
 
 func (this *Req) read_host(atype byte, buf []byte) string {
 
 	switch atype {
 	case 0x01:
-		_, err := io.ReadAtLeast(this.req_conn, buf[len(buf):6], 6-len(buf))
-		check_err(err)
 		ip := net.IPv4(buf[0], this.buf[1], this.buf[2], this.buf[3])
 		port := binary.BigEndian.Uint16(this.buf[4:])
 		return fmt.Sprintf("%s:%d", ip.String(), port)
 	case 0x03:
-		addr_len := 0
-		if len(buf) > 0 {
-			addr_len = buf[0]
-		} else {
-			_, err := io.ReadAtLeast(this.req_conn, buf, min)
-		}
-		//_, err := io.read
-
+		addr_len := int(buf[0])
+		buf := buf[1:]
+		port := binary.BigEndian.Uint16(buf[addr_len:])
+		return fmt.Sprintf("%s:%d", string(buf[:addr_len]), port)
 	case 0x04:
-		var ipv6 [16]byte
-		_, err := this.r.Read(ipv6[:])
-		check_err(err)
-		return ipv6[:]
+		return ""
 	}
-	return nil
+	return ""
 }
 
 //直接组合好，减少服务器处理判断
@@ -211,30 +199,39 @@ func (this *Req) format_host(atype byte, addr []byte, port uint16) string {
 	return ""
 }
 
-var dst_ack = []byte{05, 00, 00, 01, 00, 00, 00, 00, 00, 00}
+//var dst_ack = []byte{05, 00, 00, 01, 00, 00, 00, 00, 00, 00}
+var dst_ack = []byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x08, 0x43}
 
 func (this *Req) write_dst_ack() {
 	//给发起请求者回复dst
 	//按道理来说给req回复了，req就马上有数据过来,local也会马上转发给服务器
 	//但是服务器可能链接失败，这时候给服务器的数据会全部丢弃，这个过程就多余了，因此等服务器确认链接建立完成再发送是比较合理的
 	//但是这样会增加小数据包的数量，另外也增加了延时，客户端发数据和拨号其实可以并行的，这样减少了延时
-	this.req_conn.Write(dst_ack[:])
+	this.req_conn.Write([]byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x08, 0x43})
 }
 
 func (this *Req) handle_upstream() {
-	var data [256]byte
+	buf := this.buf[:]
 	for {
-		n, err := this.r.Read(data[:])
-		check_err(err)
-		fmt.Println(data[:n])
+		n, err := this.req_conn.Read(buf)
+		if util.ChkError(err) == 0 {
+			this.fwd_conn.Close()
+			break
+		}
+		//fmt.Println(string(buf[:n]))
+		this.fwd_conn.Write(buf[:n])
 	}
 }
 
 func (this *Req) handle_downstream() {
-	var data [256]byte
+	buf := make([]byte, 512)
 	for {
-		n, err := this.r.Read(data[:])
-		check_err(err)
-		fmt.Println(data[:n])
+		n, err := this.fwd_conn.Read(buf)
+		if util.ChkError(err) == 0 {
+			this.req_conn.Close()
+			break
+		}
+		//fmt.Println(string(buf[:n]))
+		this.req_conn.Write(buf[:n])
 	}
 }
