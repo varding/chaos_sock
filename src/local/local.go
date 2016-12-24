@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -13,6 +14,8 @@ import (
 
 /*
 	local放在本地，可以认为前面的握手是不会分包的，因此readFull是可以把协议一次全部读完
+	local到fwd服务器之间的链接不稳定，ping会有不少丢包，正常延时300ms
+	修改使用udp发送数据，每个数据一次发送5次，收到后立即回复ack，数据包不会重复转发
 */
 
 func main() {
@@ -36,14 +39,16 @@ func main() {
 }
 
 func run(local_port int) {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", local_port))
+	var addr *net.TCPAddr
+	addr, _ = net.ResolveTCPAddr("tcp", fmt.Sprintf(":%d", local_port))
+	ln, err := net.ListenTCP("tcp", addr)
 	if err != nil {
 		log.Panicln("listen err:", err)
 		return
 	}
 
 	for {
-		conn, err := ln.Accept()
+		conn, err := ln.AcceptTCP()
 		if err != nil {
 			log.Fatalln("accept err:", err)
 		} else {
@@ -56,14 +61,20 @@ func run(local_port int) {
 http://blog.csdn.net/testcs_dn/article/details/7915505
 */
 
+//不仅仅是
+type ReqId struct {
+	ip   [4]byte
+	port uint16
+}
+
 type Req struct {
-	req_conn net.Conn
-	fwd_conn net.Conn
-	req_port string //用port作为sessionid来区分哪个连接
+	req_conn *net.TCPConn
+	req_id   ReqId //sessionid来区分哪个连接
 	buf      [2048]byte
 }
 
-func handle_sock5(conn net.Conn) {
+func handle_sock5(conn *net.TCPConn) {
+
 	addr := conn.RemoteAddr().String()
 	addr_parts := strings.Split(addr, ":")
 	req_port := addr_parts[1]
@@ -85,10 +96,13 @@ func handle_sock5(conn net.Conn) {
 	if len(host) == 0 {
 		return
 	}
-	//连接fwd服务器
-	r.connect_fwd(host)
-	//给客户端写ack
+	//在连接服务器前给客户端写ack，这样尽可能的让req的后续请求与host一起发出去
 	r.write_dst_ack() //立即回复可以减少延时，但是可能会给服务器增加没必要的数据接收
+
+	//连接fwd服务器
+	r.connect_fwd()
+
+	r.send_fwd_handshake(host)
 
 	r.fwd()
 }
@@ -132,6 +146,7 @@ func (this *Req) parse_host() string {
 	buf := this.buf[:]
 	//ver,cmd,rsv,atype,addr,port
 	n, err := this.req_conn.Read(buf)
+
 	check_err(err)
 	buf = buf[:n]
 
@@ -153,15 +168,33 @@ func (this *Req) parse_host() string {
 	return ""
 }
 
-func (this *Req) connect_fwd(host string) {
+func (this *Req) connect_fwd() {
 	var err error
 	this.fwd_conn, err = net.Dial("tcp", "127.0.0.1:1010")
 	check_err(err)
+}
+
+//发送握手信息
+/*
+key	32bytes
+iv  32bytes
+host_len 1byte
+host	 n
+readAtLeast多等至少一个字节，这样能一次多携带一些信息，但是不要太多
+*/
+func (this *Req) send_fwd_handshake(host string) {
+	//等待至少一个字节，最多128字节的后续数据，这些一起作为握手数据发过去，这样尽量减少第一个包的长度特征
+	buf := this.buf[:]
+	key := buf[:32]
+	iv := buf[32:64]
+	data := buf[64:]
+	data[0] = byte(len(host) + 1)
+	n, err := io.ReadAtLeast(this.req_conn, data[1:], 1)
 
 	//给转发服务器发送host
-	var buf_len [1]byte
-	buf_len[0] = byte(len(host) + 1)
-	this.fwd_conn.Write(buf_len[:])
+	//var buf_len [1]byte
+	//buf_len[0] = byte(len(host) + 1)
+	//this.fwd_conn.Write(buf_len[:])
 	this.fwd_conn.Write([]byte(host))
 }
 
