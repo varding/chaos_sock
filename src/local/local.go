@@ -1,14 +1,13 @@
 package main
 
 import (
+	"chaos"
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
-	"strings"
 	"util"
 )
 
@@ -20,12 +19,12 @@ import (
 
 func main() {
 	var (
-		local_port  int
-		server_port int
+		local_port int
+		//server_port int
 	)
 	flag.IntVar(&local_port, "lport", 1008, "local port")
 	//一个协商端口，实际端口重新分配，尽量减少重复数据包
-	flag.IntVar(&server_port, "sport", 12345, "server port")
+	//flag.IntVar(&server_port, "sport", 12345, "server port")
 
 	flag.Parse()
 
@@ -61,50 +60,65 @@ func run(local_port int) {
 http://blog.csdn.net/testcs_dn/article/details/7915505
 */
 
-//不仅仅是
-type ReqId struct {
-	ip   [4]byte
-	port uint16
-}
+var tunnel chaos.Tunnel
 
 type Req struct {
-	req_conn *net.TCPConn
-	req_id   ReqId //sessionid来区分哪个连接
-	buf      [2048]byte
+	req_conn    *net.TCPConn
+	sock5_key   chaos.Sock5Key //ip,port
+	buf         [1024]byte     //不能太长，udp不能大约1500字节
+	tx_pack_cnt uint32         //发送的包序号
+}
+
+func new_req(conn *net.TCPConn, addr *net.TCPAddr) *Req {
+	return &Req{req_conn: conn, sock5_key: chaos.NewSock5Key(addr), tx_pack_cnt: 100}
+}
+
+func (this *Req) Write(data []byte) {
+	tunnel.Write(data, &this.sock5_key, this.tx_pack_cnt)
+	this.tx_pack_cnt++
 }
 
 func handle_sock5(conn *net.TCPConn) {
-
-	addr := conn.RemoteAddr().String()
-	addr_parts := strings.Split(addr, ":")
-	req_port := addr_parts[1]
+	addr := conn.RemoteAddr().(*net.TCPAddr)
 
 	defer func() {
 		conn.Close()
 		if err := recover(); err != nil {
-			log.Printf("[%s]%v", req_port, err)
+			log.Printf("[%v]%v", addr, err)
 		}
 
-		log.Printf("[%s]exit req\n", req_port)
+		log.Printf("[%v]exit req\n", addr)
 	}()
 
-	r := Req{req_conn: conn, req_port: req_port}
-	r.check_hand_shake()
-	r.write_hand_shake_ack()
-	host := r.parse_host()
+	r := new_req(conn, addr)
+	r.sock5_proto()
+	r.read_sock5()
+}
+
+func (this *Req) sock5_proto() {
+	this.check_hand_shake()
+	this.write_hand_shake_ack()
+	host := this.parse_host()
 
 	if len(host) == 0 {
 		return
 	}
+
+	tunnel.AddReq(this.req_conn, &this.sock5_key)
+
+	defer func() {
+		//删除掉这个入口
+		tunnel.DelReq(&this.sock5_key)
+	}()
+
 	//在连接服务器前给客户端写ack，这样尽可能的让req的后续请求与host一起发出去
-	r.write_dst_ack() //立即回复可以减少延时，但是可能会给服务器增加没必要的数据接收
+	//立即回复可以减少延时，但是可能会给服务器增加没必要的数据接收
+	this.write_dst_ack()
 
-	//连接fwd服务器
-	r.connect_fwd()
-
-	r.send_fwd_handshake(host)
-
-	r.fwd()
+	//写host
+	copy(this.buf[:], []byte(host))
+	buf := this.buf[:len(host)]
+	this.Write(buf)
 }
 
 func check_err(err error) {
@@ -119,7 +133,7 @@ func (this *Req) check_hand_shake() {
 	check_err(err)
 	buf = buf[:n]
 
-	log.Printf("[%s]ver:%d,method num:%d,method:%d\n", this.req_port, buf[0], buf[1], buf[2])
+	log.Printf("[%v]ver:%d,method num:%d,method:%d\n", this.sock5_key, buf[0], buf[1], buf[2])
 
 	//sock4不支持远程dns解析，这儿不支持
 	if buf[0] != 5 {
@@ -138,10 +152,6 @@ func (this *Req) write_hand_shake_ack() {
 	this.req_conn.Write(ack[:])
 }
 
-/*
-
- */
-
 func (this *Req) parse_host() string {
 	buf := this.buf[:]
 	//ver,cmd,rsv,atype,addr,port
@@ -152,7 +162,7 @@ func (this *Req) parse_host() string {
 
 	cmd := buf[1]
 	atype := buf[3]
-	log.Printf("[%s]ver:%d,cmd:%d,atype:%d", this.req_port, buf[0], cmd, atype)
+	log.Printf("[%s]ver:%d,cmd:%d,atype:%d", this.sock5_key, buf[0], cmd, atype)
 
 	//剩余可用的数据
 	buf = buf[4:]
@@ -161,18 +171,18 @@ func (this *Req) parse_host() string {
 
 		host := this.read_host(atype, buf)
 
-		log.Printf("[%s]%s", this.req_port, host)
+		log.Printf("[%s]%s", this.sock5_key, host)
 		return host
 
 	}
 	return ""
 }
 
-func (this *Req) connect_fwd() {
-	var err error
-	this.fwd_conn, err = net.Dial("tcp", "127.0.0.1:1010")
-	check_err(err)
-}
+// func (this *Req) connect_fwd() {
+// 	var err error
+// 	this.fwd_conn, err = net.Dial("tcp", "127.0.0.1:1010")
+// 	check_err(err)
+// }
 
 //发送握手信息
 /*
@@ -182,21 +192,21 @@ host_len 1byte
 host	 n
 readAtLeast多等至少一个字节，这样能一次多携带一些信息，但是不要太多
 */
-func (this *Req) send_fwd_handshake(host string) {
-	//等待至少一个字节，最多128字节的后续数据，这些一起作为握手数据发过去，这样尽量减少第一个包的长度特征
-	buf := this.buf[:]
-	key := buf[:32]
-	iv := buf[32:64]
-	data := buf[64:]
-	data[0] = byte(len(host) + 1)
-	n, err := io.ReadAtLeast(this.req_conn, data[1:], 1)
+// func (this *Req) send_fwd_handshake(host string) {
+// 	//等待至少一个字节，最多128字节的后续数据，这些一起作为握手数据发过去，这样尽量减少第一个包的长度特征
+// 	buf := this.buf[:]
+// 	key := buf[:32]
+// 	iv := buf[32:64]
+// 	data := buf[64:]
+// 	data[0] = byte(len(host) + 1)
+// 	n, err := io.ReadAtLeast(this.req_conn, data[1:], 1)
 
-	//给转发服务器发送host
-	//var buf_len [1]byte
-	//buf_len[0] = byte(len(host) + 1)
-	//this.fwd_conn.Write(buf_len[:])
-	this.fwd_conn.Write([]byte(host))
-}
+// 	//给转发服务器发送host
+// 	//var buf_len [1]byte
+// 	//buf_len[0] = byte(len(host) + 1)
+// 	//this.fwd_conn.Write(buf_len[:])
+// 	this.fwd_conn.Write([]byte(host))
+// }
 
 func (this *Req) read_host(atype byte, buf []byte) string {
 
@@ -217,19 +227,19 @@ func (this *Req) read_host(atype byte, buf []byte) string {
 }
 
 //直接组合好，减少服务器处理判断
-func (this *Req) format_host(atype byte, addr []byte, port uint16) string {
-	switch atype {
-	case 0x01:
-		ip_addr := net.IPv4(addr[0], addr[1], addr[2], addr[3])
-		return fmt.Sprintf("%s:%d", ip_addr.String(), port)
-	case 0x03:
-		return fmt.Sprintf("%s:%d", string(addr), port)
-	case 0x04:
-		//ipv6怎么做？
-		return ""
-	}
-	return ""
-}
+// func (this *Req) format_host(atype byte, addr []byte, port uint16) string {
+// 	switch atype {
+// 	case 0x01:
+// 		ip_addr := net.IPv4(addr[0], addr[1], addr[2], addr[3])
+// 		return fmt.Sprintf("%s:%d", ip_addr.String(), port)
+// 	case 0x03:
+// 		return fmt.Sprintf("%s:%d", string(addr), port)
+// 	case 0x04:
+// 		//ipv6怎么做？
+// 		return ""
+// 	}
+// 	return ""
+// }
 
 var dst_ack = []byte{05, 00, 00, 01, 00, 00, 00, 00, 00, 00}
 
@@ -243,7 +253,12 @@ func (this *Req) write_dst_ack() {
 	this.req_conn.Write([]byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x08, 0x43})
 }
 
-func (this *Req) fwd() {
-	go util.Fwd(this.req_conn, this.fwd_conn, this.buf[:])
-	util.Fwd(this.fwd_conn, this.req_conn, nil)
+func (this *Req) read_sock5() {
+	for {
+		n, err := this.req_conn.Read(this.buf[:])
+		if util.ChkError(err) == 0 {
+			break
+		}
+		this.Write(this.buf[:n])
+	}
 }

@@ -31,11 +31,21 @@ type Sock5Key struct {
 	port uint16
 }
 
+func NewSock5Key(addr *net.TCPAddr) Sock5Key {
+	sk := Sock5Key{}
+	copy(sk.ip[:], addr.IP.To4())
+	sk.port = uint16(addr.Port)
+	return sk
+}
+
+// func NewSock5Key(addr* net.TCPAddr)Sock5Key {
+// 	return Sock5Key{ip:}
+// }
 //只有这个package使用
 type sock5_req_value struct {
-	conn     *net.TCPConn
-	cnt      uint32
-	raw_data map[uint32][]byte //cnt,raw_data 保存了还没用到的数据
+	conn        *net.TCPConn
+	rx_pack_cnt uint32            //这儿保存接收到的pack_cnt，发送的在tcp相关的结构体里
+	raw_data    map[uint32][]byte //cnt,raw_data 保存了还没用到的数据
 }
 
 //包装起来给chan使用
@@ -53,6 +63,7 @@ type Tunnel struct {
 	conn         [max_udp_tunnel]*net.UDPConn
 	udp2req_chan chan []byte                   //5个udp接收之后通过这个chan收集
 	add_req_chan chan *req_kv                  //tcp请求的信息，对应sock5_req或者server
+	del_req_chan chan *Sock5Key                //tcp读取错误的时候发送key来删除req_map的某项
 	req_map      map[Sock5Key]*sock5_req_value //保存ip,port=>conn,cnt的映射
 }
 
@@ -62,8 +73,12 @@ func (this *Tunnel) AddReq(conn *net.TCPConn, key *Sock5Key) {
 	this.add_req_chan <- kv
 }
 
+func (this *Tunnel) DelReq(key *Sock5Key) {
+	this.del_req_chan <- key
+}
+
 //向tunnel里写数据
-func (this *Tunnel) Write(data []byte, ip []byte, port uint16, cnt uint32) {
+func (this *Tunnel) Write(data []byte, key *Sock5Key, cnt uint32) {
 	data_len := len(data)
 	//raw_data := data
 	data = data[:data_len+32]             //扩展32字节
@@ -71,7 +86,7 @@ func (this *Tunnel) Write(data []byte, ip []byte, port uint16, cnt uint32) {
 	proto := data[data_len : data_len+16] //协议部分
 	md5_data := data[data_len+16:]        //md5域
 
-	this.write_proto(proto, ip, port, cnt, false)
+	this.write_proto(proto, key.ip[:], key.port, cnt, false)
 
 	//加md5
 	m := md5.New()
@@ -172,8 +187,8 @@ func (this *Tunnel) extract_proto(data []byte) (*Sock5Key, uint32, bool, []byte)
 func (this *Tunnel) handle_udp2req() {
 	for {
 		d := <-this.udp2req_chan
-		//收到一次数据后检查下req_kv，没收到数据也不需要检查这个
-		this.handle_add_conn()
+		//将所有需要删除和增加的conn都检查一遍
+		this.handle_add_del_conn()
 		key, cnt, closed, raw_data := this.extract_proto(d)
 
 		v, ok := this.req_map[*key]
@@ -223,14 +238,14 @@ func (this *Tunnel) handle_udp2req() {
 
 //检查后续的pack_cnt是否在缓存里
 func (this *Tunnel) check_cache_pack(v *sock5_req_value) []byte {
-	d, ok := v.raw_data[v.cnt]
+	d, ok := v.raw_data[v.rx_pack_cnt]
 
 	if !ok {
 		return nil
 	}
 
 	//这个cnt已经完成，判断下一个cnt
-	v.cnt++
+	v.rx_pack_cnt++
 
 	return d
 }
@@ -239,13 +254,13 @@ func (this *Tunnel) check_cache_pack(v *sock5_req_value) []byte {
 func (this *Tunnel) check_pack_cnt(v *sock5_req_value, cnt uint32, raw_data []byte) bool {
 
 	//当前的cnt比已经发送完毕的cnt还小(或者相等），那么数据包就没用了，直接丢掉
-	if cnt <= v.cnt {
+	if cnt <= v.rx_pack_cnt {
 		return false
 	}
 
 	//收到的数据包是上次发送的编号+1，这个是正确的
-	if cnt == v.cnt+1 {
-		v.cnt++
+	if cnt == v.rx_pack_cnt+1 {
+		v.rx_pack_cnt++
 		return true
 	}
 
@@ -259,7 +274,6 @@ func (this *Tunnel) check_pack_cnt(v *sock5_req_value, cnt uint32, raw_data []by
 
 //这个不需要发送了，500ms会再发送一次
 // func (this *Tunnel) remote_resend_udp(key *Sock5Key, cnt uint32) {
-
 // }
 
 //收到了就朝5个udp都发送，对方只要收到了一个就可以
@@ -269,8 +283,9 @@ func (this *Tunnel) pack_ack(k *Sock5Key, v *sock5_req_value, cnt uint32) {
 	proto := ack[4:]
 	md5_data := proto[16:]
 	proto = proto[:16]
-	//ack的cnt为-1，这个表示当前包不属于数据包，是通讯包
-	this.write_proto(proto, k.ip[:], k.port, 0xffffffff, false)
+	//ack的cnt为0，这个表示当前包不属于数据包，是通讯包
+	//cnt从100开始，100以下都表示消息类型
+	this.write_proto(proto, k.ip[:], k.port, 0, false)
 	m := md5.New()
 	copy(md5_data, m.Sum(ack[:20]))
 
@@ -279,12 +294,18 @@ func (this *Tunnel) pack_ack(k *Sock5Key, v *sock5_req_value, cnt uint32) {
 	}
 }
 
-func (this *Tunnel) handle_add_conn() {
-	select {
-	case kv := <-this.add_req_chan:
-		if _, ok := this.req_map[*kv.req]; !ok {
-			this.req_map[*kv.req] = &sock5_req_value{conn: kv.conn}
+func (this *Tunnel) handle_add_del_conn() {
+	for {
+		select {
+		case kv := <-this.add_req_chan:
+			if _, ok := this.req_map[*kv.req]; !ok {
+				this.req_map[*kv.req] = &sock5_req_value{conn: kv.conn, rx_pack_cnt: 100}
+			}
+		case k := <-this.del_req_chan:
+			delete(this.req_map, *k)
+		default:
+			return
 		}
-	default:
 	}
+
 }

@@ -4,24 +4,52 @@
 		"selected_items":
 		[
 			[
+				"soc",
+				"Sock5Key\tstruct ʈ"
+			],
+			[
+				"s",
+				"Sum\t[]byte ƒ"
+			],
+			[
+				"md",
+				"md5\t package ρ"
+			],
+			[
+				"che",
+				"check_cache_pack\tbool, error ƒ"
+			],
+			[
+				"da",
+				"data_proto\t[]byte ν"
+			],
+			[
+				"to",
+				"To4\tnet.IP ƒ"
+			],
+			[
+				"sock",
+				"Sock5Key\tstruct ʈ"
+			],
+			[
+				"so",
+				"Sock5Key\tstruct ʈ"
+			],
+			[
+				"han",
+				"handle_udp2req\t ƒ"
+			],
+			[
+				"ti",
+				"tihs\t*Local ν"
+			],
+			[
 				"ra",
 				"raw_data\t[]byte ν"
 			],
 			[
-				"da",
-				"data_len\tint ν"
-			],
-			[
-				"soc",
-				"sock5_req_value\tstruct ʈ"
-			],
-			[
 				"req",
 				"req_map\tmap[sock5_req]*sock5_req_value ν"
-			],
-			[
-				"so",
-				"sock5_req_value\tstruct ʈ"
 			],
 			[
 				"fun",
@@ -126,10 +154,6 @@
 			[
 				"der",
 				"direction"
-			],
-			[
-				"ti",
-				"tile_name"
 			],
 			[
 				"tile",
@@ -252,10 +276,10 @@
 	"buffers":
 	[
 		{
-			"file": "src/local/local.go",
+			"file": "src/chaos/tunnel.go",
 			"settings":
 			{
-				"buffer_size": 4815,
+				"buffer_size": 5710,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -264,43 +288,16 @@
 			"file": "src/chaos/send.go",
 			"settings":
 			{
-				"buffer_size": 863,
+				"buffer_size": 933,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "src/chaos/local.go",
+			"file": "src/local/local.go",
 			"settings":
 			{
-				"buffer_size": 3970,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/local/test_local.go",
-			"settings":
-			{
-				"buffer_size": 305,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/server/server.go",
-			"settings":
-			{
-				"buffer_size": 1610,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/util/util.go",
-			"settings":
-			{
-				"buffer_size": 708,
+				"buffer_size": 4812,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -319,7 +316,7 @@
 		[
 			[
 				"Package Control: ",
-				"Package Control: List Packages"
+				"Package Control: Install Package"
 			]
 		],
 		"width": 432.0
@@ -353,6 +350,15 @@
 	],
 	"file_history":
 	[
+		"/K/software/server/go/chaos_sock/src/chaos/local.go",
+		"/K/software/server/go/chaos_sock/src/local/local.go",
+		"/K/software/server/go/chaos_sock/src/chaos/send.go",
+		"/C/Users/ding/AppData/Roaming/Sublime Text 3/Packages/Godef/Godef.sublime-settings",
+		"/C/Users/ding/AppData/Roaming/Sublime Text 3/Packages/Godef/Default (Windows).sublime-keymap",
+		"/K/software/server/go/chaos_sock/src/local/test_local.go",
+		"/K/software/server/go/chaos_sock/src/server/server.go",
+		"/K/software/server/go/chaos_sock/src/util/util.go",
+		"/C/Users/ding/AppData/Roaming/Sublime Text 3/Packages/User/Godef.sublime-settings",
 		"/K/software/server/go/chaos_sock/src/share/share.go",
 		"/K/software/server/go/loc/src/web/http.go",
 		"/K/software/server/go/loc/src/connection/nmea_proto.go",
@@ -400,6 +406,12 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"raw_data",
+			"Local",
+			"sock5_req_value",
+			"sock5_req_key",
+			"add_conn_chan",
+			"req_conn_chan",
 			"short",
 			"console",
 			"wheel",
@@ -431,19 +443,19 @@
 			[
 				{
 					"buffer": 0,
-					"file": "src/local/local.go",
+					"file": "src/chaos/tunnel.go",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 4815,
+						"buffer_size": 5710,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1115,
-								1115
+								4585,
+								4577
 							]
 						],
 						"settings":
@@ -452,10 +464,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 662.0,
+						"translation.y": 1114.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 2,
 					"type": "text"
 				},
 				{
@@ -464,15 +476,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 863,
+						"buffer_size": 933,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								300,
-								306
+								53,
+								24
 							]
 						],
 						"settings":
@@ -481,27 +493,27 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 90.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 1,
 					"type": "text"
 				},
 				{
 					"buffer": 2,
-					"file": "src/chaos/local.go",
+					"file": "src/local/local.go",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 3970,
+						"buffer_size": 4812,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3594,
-								3594
+								1119,
+								1119
 							]
 						],
 						"settings":
@@ -510,97 +522,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1910.0,
+						"translation.y": 630.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "src/local/test_local.go",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 305,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								25,
-								25
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "src/server/server.go",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1610,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1172,
-								1172
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 720.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "src/util/util.go",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 708,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								594,
-								594
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/GoSublime/syntax/GoSublime-Go.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
 					"type": "text"
 				}
 			]
